@@ -8,7 +8,22 @@ from adrubix import RubixHeatmap
 
 
 # INTRO
-st.set_page_config(layout="wide")
+st.set_page_config(
+    page_title="AdRubix", page_icon="https://i.ibb.co/Pr9YCJk/rubik.png",
+    layout="wide", initial_sidebar_state="expanded",
+    menu_items={
+        "About": """
+        Tool for plotting complex, highly customizable heatmaps to highlight clusters in data
+        and to track any patterns vis-à-vis metadata.
+        
+        Developed by [Alexey FEDOROV](https://github.com/afedorov-advestis)
+        
+        [AdRubix @ PyPI](https://pypi.org/project/adrubix/)
+        
+        See the complete documentation in ADRUBIX DOCS section.
+        """
+    }
+)
 st.markdown("<div id='page_top'></div>", unsafe_allow_html=True)
 
 c1, _, c2 = st.columns([2, 2, 1])
@@ -21,7 +36,7 @@ with c1:
 with c2:
     success = st.empty()
 
-with st.expander("PREVIEW ADRUBIX DOCS"):
+with st.expander("ADRUBIX DOCS"):
     resp = requests.get("https://raw.githubusercontent.com/Advestis/adrubix/master/README.md")
     readme_md = resp.text
     st.markdown(readme_md)
@@ -85,24 +100,24 @@ st.sidebar.header("Plot dimensions")
 st.sidebar.markdown("For one of the two, you can set `proportional`")
 
 if data is not None:
-    hw_default = str(6 * len(data.columns))
-    hh_default = str(6 * len(data))
-    thresh = 1.2 * float(hh_default)
+    hw_default = 6 * len(data.columns)
+    hh_default = 6 * len(data)
+    thresh = 1.2 * hh_default
     hard_thresh = 1000
     hard_thresh_hh = 700
-    if float(hh_default) > hard_thresh_hh:
-        hh_default = str(round(hard_thresh_hh))
-    if float(hw_default) < min(thresh, hard_thresh):
-        hw_default = str(round(min(thresh, hard_thresh)))
+    if hh_default > hard_thresh_hh:
+        hh_default = round(hard_thresh_hh)
+    if hw_default < min(thresh, hard_thresh):
+        hw_default = round(min(thresh, hard_thresh))
 else:
     hw_default = 1000
     hh_default = 500
 
-heatmap_width = st.sidebar.text_input("Main heatmap width", value=hw_default)
+heatmap_width = st.sidebar.number_input("Main heatmap width", value=hw_default)
 if heatmap_width != "proportional":
     heatmap_width = round(float(heatmap_width))
 
-heatmap_height = st.sidebar.text_input("Main heatmap height", value=hh_default)
+heatmap_height = st.sidebar.number_input("Main heatmap height", value=hh_default)
 if heatmap_height != "proportional":
     heatmap_height = round(float(heatmap_height))
 
@@ -153,13 +168,13 @@ st.sidebar.markdown("""---""")
 st.sidebar.header("Colorbar")
 
 show_colorbar = st.sidebar.checkbox("Show colorbar", value=True)
-colorbar_location = st.sidebar.selectbox("Colorbar location", ["top", "center", "bottom"], index=2)
+colorbar_location = st.sidebar.radio("Colorbar location", ["top", "center", "bottom"], index=2)
 colorbar_title = st.sidebar.text_input("Colorbar title")
-colorbar_height = st.sidebar.text_input("Colorbar height (pixels)")
+colorbar_height = st.sidebar.number_input("Colorbar height (pixels)", value=round(hh_default / 4))
 if colorbar_height == "":
     colorbar_height = None
 else:
-    colorbar_height = round(float(colorbar_height))
+    colorbar_height = round(colorbar_height)
 
 
 # METADATA & LEGENDS
@@ -170,7 +185,7 @@ st.sidebar.header("Metadata")
 show_metadata_rows = st.sidebar.checkbox("Show metadata for rows", value=True)
 show_metadata_rows_labels = st.sidebar.checkbox("Show labels of the metadata for rows", value=True)
 show_metadata_cols = st.sidebar.checkbox("Show metadata for columns", value=True)
-duplicate_metadata_cols = st.sidebar.selectbox(
+duplicate_metadata_cols = st.sidebar.radio(
     "Duplicate metadata for columns at the bottom of the heatmap",
     ["no", "yes", "depending on DF size"]
 )
