@@ -7,45 +7,20 @@ import pandas as pd
 from adrubix import RubixHeatmap
 
 
-def show_code_example():
-    st.markdown("Below is the example code from **AdRubix** README for reference.")
-    st.code("""
-    hm = RubixHeatmap(
-        data_path="/home/user/myproject/data/",
-        data_file="main_data.csv",
-        metadata_rows_file="meta_rows.csv",
-        metadata_cols_file="meta_cols.csv",
-        plot_save_path="/home/user/myproject/output/plot.html",
-        save_png=True,
-        scale_along="columns",
-        colorbar_title="my colorbar",
-        colorbar_location="top",
-        show_metadata_rows_labels=True,
-        show_rows_legend=False,
-        # duplicate_metadata_cols=False,
-        colormap_main="fire",
-        heatmap_width=1500,
-        heatmap_height="proportional",
-        data_rows_to_drop=["useless_row_1", "useless_row_2"],
-        row_labels_for_highlighting=["row_keyword_A", "row_keyword_B"],
-        metadata_col_to_split_rows="Group",
-        metadata_row_to_split_cols="Subject",
-        nan_color="orange",
-        sep_color="green",
-        # sep_value="median"
-    )
-    hm.plot()
-    """)
-
-
 # INTRO
 st.set_page_config(layout="wide")
 st.markdown("<div id='page_top'></div>", unsafe_allow_html=True)
 
-st.title("AdRubix × Streamlit")
-st.subheader("Streamlit GUI for AdRubix")
+c1, _, c2 = st.columns([2, 2, 1])
 
-st.markdown("[AdRubix @ PyPI](https://pypi.org/project/adrubix/)")
+with c1:
+    st.title("AdRubix × Streamlit")
+    st.subheader("Streamlit GUI for AdRubix")
+    st.markdown("[AdRubix @ PyPI](https://pypi.org/project/adrubix/)")
+
+with c2:
+    success = st.empty()
+
 with st.expander("PREVIEW ADRUBIX DOCS"):
     resp = requests.get("https://raw.githubusercontent.com/Advestis/adrubix/master/README.md")
     readme_md = resp.text
@@ -53,8 +28,12 @@ with st.expander("PREVIEW ADRUBIX DOCS"):
 
 st.markdown("1. **Upload your files** in the sidebar")
 st.markdown("2. **Set the parameters** in the sidebar (default values are preselected)")
-st.markdown("3. Once all the data are uploaded, **visualization** is retriggered by modifying parameter values")
-st.markdown("4. You can also **retrigger** it manually by pressing the button  `UPDATE PLOT`")
+st.markdown("3. Once all the data are uploaded, your **plot is rendered**")
+st.markdown("4. Plot rendering is retriggered by modifying parameter values")
+st.markdown("5. You can also retrigger it manually by pressing the button `UPDATE PLOT`")
+st.markdown("6. Download the interactive HTML plot by pressing the button `DOWNLOAD HTML`")
+st.markdown("7. Download the plot as a PNG image by pressing the button `DOWNLOAD PNG` "
+            "(available after checking the dedicated checkbox in the sidebar)")
 st.markdown("")
 
 st.sidebar.title("AdRubix parameters")
@@ -96,7 +75,7 @@ except ValueError:
     st.warning("Please upload your metadata for columns file", icon="⚠️")
 
 st.markdown("")
-save_png = st.sidebar.checkbox("Save plot as PNG image as well")
+save_png = st.sidebar.checkbox("Also save plot as downloadable PNG image")
 
 
 # DIMENSIONS
@@ -110,7 +89,7 @@ if data is not None:
     hh_default = str(6 * len(data))
     thresh = 1.2 * float(hh_default)
     hard_thresh = 1000
-    hard_thresh_hh = 600
+    hard_thresh_hh = 700
     if float(hh_default) > hard_thresh_hh:
         hh_default = str(round(hard_thresh_hh))
     if float(hw_default) < min(thresh, hard_thresh):
@@ -127,7 +106,19 @@ heatmap_height = st.sidebar.text_input("Main heatmap height", value=hh_default)
 if heatmap_height != "proportional":
     heatmap_height = round(float(heatmap_height))
 
-meta_margin = 300
+error_prop = "Upload your data first! Then you will be able to set a `proportional` width or height, if desired"
+if heatmap_width == "proportional":
+    if data is not None:
+        heatmap_width = int(heatmap_height * len(data.columns) / len(data))
+    else:
+        st.error(error_prop, icon="🚨")
+if heatmap_height == "proportional":
+    if data is not None:
+        heatmap_height = int(heatmap_width * len(data) / len(data.columns))
+    else:
+        st.error(error_prop, icon="🚨")
+
+meta_margin = 350
 html_width = heatmap_width + meta_margin
 html_height = heatmap_height + meta_margin
 
@@ -287,18 +278,38 @@ st.markdown("<div id='plot_top'></div>", unsafe_allow_html=True)
 if data is not None and metadata_rows is not None and metadata_cols is not None:
 
     st.markdown("""---""")
-    st.button("UPDATE PLOT", on_click=hm.plot())
+    col1, _, _, col2, _, _, col3 = st.columns(7)
+    with col1:
+        st.button("UPDATE PLOT", on_click=hm.plot())
+
+    if save_png:
+        try:
+            with open("./tmp.png", mode='rb') as png:
+                with col2:
+                    st.download_button("DOWNLOAD PNG", data=png, file_name="heatmap.png", mime="image/x-png")
+
+        except FileNotFoundError as e:
+            st.error(f"FILE MISSING: {str(e)}", icon="🚨")
 
     try:
-        html = open("./tmp.html", mode='r', encoding='utf-8')
-        source_code = html.read().replace(
-            '<body>', '<body style="background-color:white;">'
-        )
+        with open("./tmp.html", mode='r', encoding='utf-8') as html:
+            source_code = html.read().replace(
+                '<body>', '<body style="background-color:white;">'
+            )
+        with col3:
+            st.download_button("DOWNLOAD HTML", data=source_code, file_name="heatmap.html", mime="text/html")
+
         components.html(source_code, width=html_width, height=html_height)
-        st.markdown(f'<p style="text-align:right;"><a href="#plot_top">BACK TO PLOT TOP</a></p>',
+        st.markdown('<p style="text-align:right;"><a href="#plot_top">BACK TO PLOT TOP</a></p>',
                     unsafe_allow_html=True)
-        st.markdown(f'<p style="text-align:right;"><a href="#page_top">BACK TO PAGE TOP</a></p>',
+        st.markdown('<p style="text-align:right;"><a href="#page_top">BACK TO PAGE TOP</a></p>',
                     unsafe_allow_html=True)
+
+        success.markdown(
+            '<p style="text-align:right;"><div style="color:green;font-size:20pt"><b>PLOT READY ! </b></div>' +
+            '<br/><a href="#plot_top">GO TO PLOT TOP</a></p>',
+            unsafe_allow_html=True
+        )
 
     except FileNotFoundError as e:
         st.error(f"FILE MISSING: {str(e)}", icon="🚨")
