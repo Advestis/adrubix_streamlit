@@ -311,6 +311,9 @@ if data is not None and metadata_rows is not None and metadata_cols is not None:
         except (KeyError, ValueError) as e:
             st.error(f"{wrong_par_error}**{str(e)}**", icon="🚨")
             st.stop()
+        except RuntimeError as e:
+            st.error(f"WRONG RUNTIME CONFIG ::: **{str(e)}**", icon="🚨")
+            st.stop()
 
     if save_png:
         with col2:
@@ -319,8 +322,6 @@ if data is not None and metadata_rows is not None and metadata_cols is not None:
                     st.download_button("DOWNLOAD PNG", data=png, file_name="heatmap.png", mime="image/x-png")
             except FileNotFoundError as e:
                 st.error(f"FILE MISSING ::: {str(e)}", icon="🚨")
-            except RuntimeError as e:
-                st.error(f"WRONG RUNTIME CONFIG ::: {str(e)}", icon="🚨")
 
     try:
         with open("./tmp.html", mode='r', encoding='utf-8') as html:
