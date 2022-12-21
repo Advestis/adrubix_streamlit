@@ -26,14 +26,18 @@ st.set_page_config(
 )
 st.markdown("<div id='page_top'></div>", unsafe_allow_html=True)
 
-c1, _, c2 = st.columns([2, 2, 1])
+c1, c2, _, c3 = st.columns([1, 2, 1, 1])
 
 with c1:
+    st.markdown('<img src="https://i.ibb.co/Pr9YCJk/rubik.png" width="200"/><br/><br/>',
+                unsafe_allow_html=True)
+
+with c2:
     st.title("AdRubix × Streamlit")
     st.subheader("Streamlit GUI for AdRubix")
     st.markdown("[AdRubix @ PyPI](https://pypi.org/project/adrubix/)")
 
-with c2:
+with c3:
     success = st.empty()
 
 with st.expander("ADRUBIX DOCS"):
