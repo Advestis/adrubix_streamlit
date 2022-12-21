@@ -1,2 +1,2 @@
-adrubix>=0.1.54
+adrubix>=0.1.61
 streamlit

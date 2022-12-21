@@ -107,7 +107,7 @@ if data is not None:
     hw_default = 6 * len(data.columns)
     hh_default = 6 * len(data)
     thresh = 1.2 * hh_default
-    hard_thresh = 1000
+    hard_thresh = 900
     hard_thresh_hh = 700
     if hh_default > hard_thresh_hh:
         hh_default = round(hard_thresh_hh)
@@ -137,10 +137,6 @@ if heatmap_height == "proportional":
     else:
         st.error(error_prop, icon="🚨")
 
-meta_margin = 350
-html_width = heatmap_width + meta_margin
-html_height = heatmap_height + meta_margin
-
 
 # DATAPREP
 
@@ -157,12 +153,16 @@ if normalize_along == "do not normalize":
 
 color_scaling_quantile = st.sidebar.slider("Color scaling quantile", min_value=80, max_value=100, value=95)
 
-data_rows_to_drop = st.sidebar.text_input("Data rows to drop (Python list syntax)", value="[]")
-if data_rows_to_drop == "" or data_rows_to_drop == "[]":
+data_rows_to_drop = st.sidebar.text_input("Data rows to drop (row labels separated by commas)")
+data_rows_to_drop = data_rows_to_drop.split(",")
+data_rows_to_drop = [row.strip() for row in data_rows_to_drop]
+if data_rows_to_drop == "":
     data_rows_to_drop = None
 
-data_cols_to_drop = st.sidebar.text_input("Data columns to drop (Python list syntax)", value="[]")
-if data_cols_to_drop == "" or data_cols_to_drop == "[]":
+data_cols_to_drop = st.sidebar.text_input("Data columns to drop (row labels separated by commas)")
+data_cols_to_drop = data_cols_to_drop.split(",")
+data_cols_to_drop = [row.strip() for row in data_cols_to_drop]
+if data_cols_to_drop == "":
     data_cols_to_drop = None
 
 
@@ -172,7 +172,7 @@ st.sidebar.markdown("""---""")
 st.sidebar.header("Colorbar")
 
 show_colorbar = st.sidebar.checkbox("Show colorbar", value=True)
-colorbar_location = st.sidebar.radio("Colorbar location", ["top", "center", "bottom"], index=2)
+colorbar_location = st.sidebar.radio("Colorbar location", ["top", "center", "bottom"])
 colorbar_title = st.sidebar.text_input("Colorbar title")
 colorbar_height = st.sidebar.number_input("Colorbar height (pixels)", value=round(hh_default / 4))
 if colorbar_height == "":
@@ -248,12 +248,16 @@ metadata_row_to_split_cols = st.sidebar.text_input("Row of metadata for columns 
 if metadata_row_to_split_cols == "":
     metadata_row_to_split_cols = None
 
-row_labels_for_highlighting = st.sidebar.text_input("Row labels for highlighting (Python list syntax)", value="[]")
-if row_labels_for_highlighting == "" or row_labels_for_highlighting == "[]":
+row_labels_for_highlighting = st.sidebar.text_input("Row labels for highlighting (separated by commas)")
+row_labels_for_highlighting = row_labels_for_highlighting.split(",")
+row_labels_for_highlighting = [row.strip() for row in row_labels_for_highlighting]
+if row_labels_for_highlighting == "":
     row_labels_for_highlighting = None
 
 
 # PLOT
+wrong_par_error = "WRONG PARAMETERS (please double-check and modify) ::: "
+
 try:
     hm = RubixHeatmap(
         data=data,
@@ -291,6 +295,9 @@ try:
 except FileNotFoundError as e:
     if str(e) == "Data path is not set!":
         pass
+except (KeyError, ValueError) as e:
+    st.error(f"{wrong_par_error}**{str(e)}**", icon="🚨")
+    st.stop()
 
 st.markdown("<div id='plot_top'></div>", unsafe_allow_html=True)
 
@@ -299,16 +306,21 @@ if data is not None and metadata_rows is not None and metadata_cols is not None:
     st.markdown("""---""")
     col1, _, _, col2, _, _, col3 = st.columns(7)
     with col1:
-        st.button("UPDATE PLOT", on_click=hm.plot())
+        try:
+            st.button("UPDATE PLOT", on_click=hm.plot())
+        except (KeyError, ValueError) as e:
+            st.error(f"{wrong_par_error}**{str(e)}**", icon="🚨")
+            st.stop()
 
     if save_png:
-        try:
-            with open("./tmp.png", mode='rb') as png:
-                with col2:
+        with col2:
+            try:
+                with open("./tmp.png", mode='rb') as png:
                     st.download_button("DOWNLOAD PNG", data=png, file_name="heatmap.png", mime="image/x-png")
-
-        except FileNotFoundError as e:
-            st.error(f"FILE MISSING: {str(e)}", icon="🚨")
+            except FileNotFoundError as e:
+                st.error(f"FILE MISSING ::: {str(e)}", icon="🚨")
+            except RuntimeError as e:
+                st.error(f"WRONG RUNTIME CONFIG ::: {str(e)}", icon="🚨")
 
     try:
         with open("./tmp.html", mode='r', encoding='utf-8') as html:
@@ -317,6 +329,14 @@ if data is not None and metadata_rows is not None and metadata_cols is not None:
             )
         with col3:
             st.download_button("DOWNLOAD HTML", data=source_code, file_name="heatmap.html", mime="text/html")
+
+        meta_margin_left = 50 + 72 * int(show_metadata_rows) + 100 * int(show_metadata_rows_labels)
+        meta_margin_right = 130 * int(show_rows_legend) + 75 * int(show_colorbar) + 50
+        html_width = meta_margin_left + heatmap_width + meta_margin_right
+
+        meta_margin_top = 25 + 72 * int(show_metadata_cols) + 25
+        meta_margin_bottom = 50 + 100 * int(duplicate_metadata_cols) + 100 * int(show_cols_legend)
+        html_height = meta_margin_top + heatmap_height + meta_margin_bottom
 
         components.html(source_code, width=html_width, height=html_height)
         st.markdown('<p style="text-align:right;"><a href="#plot_top">BACK TO PLOT TOP</a></p>',
