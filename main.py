@@ -253,7 +253,7 @@ if row_labels_for_highlighting == "":
 
 
 # PLOT
-wrong_par_error = "WRONG PARAMETERS (please double-check and modify) ::: "
+wrong_par_error = "WRONG PARAMETER OR DATA VALUES (please double-check and modify) ::: "
 
 try:
     hm = RubixHeatmap(
