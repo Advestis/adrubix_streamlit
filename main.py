@@ -101,7 +101,7 @@ save_png = st.sidebar.checkbox("Also save plot as downloadable PNG image (will n
 
 st.sidebar.markdown("""---""")
 st.sidebar.header("Plot dimensions")
-st.sidebar.markdown("For one of the two, you can try setting `proportional`")
+st.sidebar.markdown("In pixels. For one of the two, you can try setting `proportional`")
 
 if data is not None:
     hw_default = 6 * len(data.columns)
@@ -114,11 +114,11 @@ else:
     hw_default = 1000
     hh_default = 500
 
-heatmap_width = st.sidebar.number_input("Main heatmap width", value=hw_default)
+heatmap_width = st.sidebar.text_input("Main heatmap width", value=hw_default)
 if heatmap_width != "proportional":
     heatmap_width = round(float(heatmap_width))
 
-heatmap_height = st.sidebar.number_input("Main heatmap height", value=hh_default)
+heatmap_height = st.sidebar.text_input("Main heatmap height", value=hh_default)
 if heatmap_height != "proportional":
     heatmap_height = round(float(heatmap_height))
 
@@ -328,8 +328,8 @@ if data is not None and metadata_rows is not None and metadata_cols is not None:
         with col3:
             st.download_button("DOWNLOAD HTML", data=source_code, file_name="heatmap.html", mime="text/html")
 
-        meta_margin_left = 50 + 72 * int(show_metadata_rows) + 100 * int(show_metadata_rows_labels)
-        meta_margin_right = 130 * int(show_rows_legend) + 75 * int(show_colorbar) + 50
+        meta_margin_left = 50 + 72 * int(show_metadata_rows) + 150 * int(show_metadata_rows_labels)
+        meta_margin_right = 180 * int(show_rows_legend) + 75 * int(show_colorbar) + 100
         html_width = meta_margin_left + heatmap_width + meta_margin_right
 
         meta_margin_top = 25 + 72 * int(show_metadata_cols) + 25
