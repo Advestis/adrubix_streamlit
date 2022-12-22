@@ -83,7 +83,7 @@ try:
     with st.expander("PREVIEW METADATA ROWS"):
         st.dataframe(metadata_rows, height=600)
 except ValueError:
-    st.warning("Please upload your metadata for rows file", icon="⚠️")
+    st.warning("Please upload your rows metadata file", icon="⚠️")
 
 try:
     metadata_cols = pd.read_csv(metadata_cols_file, header=0, index_col=0)
@@ -91,26 +91,23 @@ try:
         st.dataframe(metadata_cols, height=600)
     st.markdown(f'<p style="text-align:right;"><a href="#plot_top">GO TO PLOT TOP</a></p>', unsafe_allow_html=True)
 except ValueError:
-    st.warning("Please upload your metadata for columns file", icon="⚠️")
+    st.warning("Please upload your columns metadata file", icon="⚠️")
 
 st.markdown("")
-save_png = st.sidebar.checkbox("Also save plot as downloadable PNG image")
+save_png = st.sidebar.checkbox("Also save plot as downloadable PNG image (will not work in the cloud)")
 
 
 # DIMENSIONS
 
 st.sidebar.markdown("""---""")
 st.sidebar.header("Plot dimensions")
-st.sidebar.markdown("For one of the two, you can set `proportional`")
+st.sidebar.markdown("For one of the two, you can try setting `proportional`")
 
 if data is not None:
     hw_default = 6 * len(data.columns)
     hh_default = 6 * len(data)
     thresh = 1.2 * hh_default
     hard_thresh = 900
-    hard_thresh_hh = 700
-    if hh_default > hard_thresh_hh:
-        hh_default = round(hard_thresh_hh)
     if hw_default < min(thresh, hard_thresh):
         hw_default = round(min(thresh, hard_thresh))
 else:
@@ -153,13 +150,13 @@ if normalize_along == "do not normalize":
 
 color_scaling_quantile = st.sidebar.slider("Color scaling quantile", min_value=80, max_value=100, value=95)
 
-data_rows_to_drop = st.sidebar.text_input("Data rows to drop (row labels separated by commas)")
+data_rows_to_drop = st.sidebar.text_input("Data rows to drop (labels separated by commas)")
 data_rows_to_drop = data_rows_to_drop.split(",")
 data_rows_to_drop = [row.strip() for row in data_rows_to_drop]
 if data_rows_to_drop == "":
     data_rows_to_drop = None
 
-data_cols_to_drop = st.sidebar.text_input("Data columns to drop (row labels separated by commas)")
+data_cols_to_drop = st.sidebar.text_input("Data columns to drop (labels separated by commas)")
 data_cols_to_drop = data_cols_to_drop.split(",")
 data_cols_to_drop = [row.strip() for row in data_cols_to_drop]
 if data_cols_to_drop == "":
@@ -186,14 +183,14 @@ else:
 st.sidebar.markdown("""---""")
 st.sidebar.header("Metadata")
 
-show_metadata_rows = st.sidebar.checkbox("Show metadata for rows", value=True)
-show_metadata_rows_labels = st.sidebar.checkbox("Show labels of the metadata for rows", value=True)
-show_metadata_cols = st.sidebar.checkbox("Show metadata for columns", value=True)
+show_metadata_rows = st.sidebar.checkbox("Show rows metadata", value=True)
+show_metadata_rows_labels = st.sidebar.checkbox("Show labels of rows metadata", value=True)
+show_metadata_cols = st.sidebar.checkbox("Show columns metadata", value=True)
 duplicate_metadata_cols = st.sidebar.radio(
-    "Duplicate metadata for columns at the bottom of the heatmap",
-    ["no", "yes", "depending on DF size"]
+    "Duplicate columns metadata at the bottom",
+    ["no", "yes", "depending on main data size"]
 )
-if duplicate_metadata_cols == "depending on DF size":
+if duplicate_metadata_cols == "depending on main data size":
     duplicate_metadata_cols = None
 elif duplicate_metadata_cols == "yes":
     duplicate_metadata_cols = True
@@ -203,8 +200,8 @@ elif duplicate_metadata_cols == "no":
 st.sidebar.markdown("""---""")
 st.sidebar.header("Legends")
 
-show_rows_legend = st.sidebar.checkbox("Show the legend for metadata for rows")
-show_cols_legend = st.sidebar.checkbox("Show the legend for metadata for columns", value=True)
+show_rows_legend = st.sidebar.checkbox("Show the legend for rows metadata")
+show_cols_legend = st.sidebar.checkbox("Show the legend for columns metadata", value=True)
 
 
 # COLORMAPS
@@ -216,11 +213,11 @@ colormap_main = st.sidebar.text_input("Colormap for main data (known by holoview
 if colormap_main == "":
     colormap_main = None
 
-colormap_metarows = st.sidebar.text_input("Colormap for metadata for rows (known by holoviews)", value="glasbey")
+colormap_metarows = st.sidebar.text_input("Colormap for rows metadata (known by holoviews)", value="glasbey")
 if colormap_metarows == "":
     colormap_metarows = None
 
-colormap_metacols = st.sidebar.text_input("Colormap for metadata for cols (known by holoviews)", value="Category20")
+colormap_metacols = st.sidebar.text_input("Colormap for columns metadata (known by holoviews)", value="Category20")
 if colormap_metacols == "":
     colormap_metacols = None
 
@@ -240,11 +237,11 @@ if sep_value == "user-defined color":
 st.sidebar.markdown("""---""")
 st.sidebar.header("Plot enhancement")
 
-metadata_rows_sep = st.sidebar.text_input("Column of metadata for rows to split blocks of data")
+metadata_rows_sep = st.sidebar.text_input("Rows metadata separator (column label)")
 if metadata_rows_sep == "":
     metadata_rows_sep = None
 
-metadata_cols_sep = st.sidebar.text_input("Row of metadata for columns to split blocks of data")
+metadata_cols_sep = st.sidebar.text_input("Columns metadata separator (column label)")
 if metadata_cols_sep == "":
     metadata_cols_sep = None
 
