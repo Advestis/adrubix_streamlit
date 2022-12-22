@@ -240,13 +240,13 @@ if sep_value == "user-defined color":
 st.sidebar.markdown("""---""")
 st.sidebar.header("Plot enhancement")
 
-metadata_col_to_split_rows = st.sidebar.text_input("Column of metadata for rows to split blocks of data")
-if metadata_col_to_split_rows == "":
-    metadata_col_to_split_rows = None
+metadata_rows_sep = st.sidebar.text_input("Column of metadata for rows to split blocks of data")
+if metadata_rows_sep == "":
+    metadata_rows_sep = None
 
-metadata_row_to_split_cols = st.sidebar.text_input("Row of metadata for columns to split blocks of data")
-if metadata_row_to_split_cols == "":
-    metadata_row_to_split_cols = None
+metadata_cols_sep = st.sidebar.text_input("Row of metadata for columns to split blocks of data")
+if metadata_cols_sep == "":
+    metadata_cols_sep = None
 
 row_labels_for_highlighting = st.sidebar.text_input("Row labels for highlighting (separated by commas)")
 row_labels_for_highlighting = row_labels_for_highlighting.split(",")
@@ -288,8 +288,8 @@ try:
         nan_color=nan_color,
         sep_color=sep_color,
         sep_value=sep_value,
-        metadata_col_to_split_rows=metadata_col_to_split_rows,
-        metadata_row_to_split_cols=metadata_row_to_split_cols,
+        metadata_rows_sep=metadata_rows_sep,
+        metadata_cols_sep=metadata_cols_sep,
         row_labels_for_highlighting=row_labels_for_highlighting
     )
 except FileNotFoundError as e:
